@@ -1,0 +1,65 @@
+{% extends 'layouts/module_admin.html' %}
+
+{% block content %}
+<div class="container-fluid">
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+    <div class="row">
+        <div class="col">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">Добавить устройство</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('DeviceMonitor.module') }}">
+                        <input type="hidden" name="action" value="add">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Имя</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="host" class="form-label">Хост (IP или hostname)</label>
+                            <input type="text" class="form-control" id="host" name="host" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="port" class="form-label">Порт (0 для проверки только ICMP, 1–65535 для TCP)</label>
+                            <input type="number" class="form-control" id="port" name="port" min="0" max="65535" value="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="action_online" class="form-label">Действие при переходе онлайн</label>
+                            <input type="text" class="form-control" id="action_online" name="action_online">
+                        </div>
+                        <div class="mb-3">
+                            <label for="action_offline" class="form-label">Действие при переходе оффлайн</label>
+                            <input type="text" class="form-control" id="action_offline" name="action_offline">
+                        </div>
+                        <div class="mb-3">
+                            <label for="interval_online" class="form-label">Интервал проверки онлайн (с)</label>
+                            <input type="number" class="form-control" id="interval_online" name="interval_online" value="60" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="interval_offline" class="form-label">Интервал проверки оффлайн (с)</label>
+                            <input type="number" class="form-control" id="interval_offline" name="interval_offline" value="30" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="retries" class="form-label">Количество попыток</label>
+                            <input type="number" class="form-control" id="retries" name="retries" value="3" min="1" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Добавить</button>
+                        <a href="{{ url_for('DeviceMonitor.module') }}" class="btn btn-secondary">Отмена</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
