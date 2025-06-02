@@ -23,6 +23,7 @@ from sqlalchemy.orm.exc import DetachedInstanceError
 from app.core.lib.object import setProperty
 
 class OnlineDevice(SurrogatePK, db.Model):
+    __module__ = "app.plugins.DeviceMonitor"  # Явно задаём module
     __tablename__ = "online_devices"
     name = Column(String(255), nullable=False)
     host = Column(String(255), nullable=False)
