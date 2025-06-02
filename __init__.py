@@ -13,46 +13,39 @@ import threading
 import time
 import socket
 import subprocess
-import logging
-import os
 import shutil
-from flask import render_template, request, redirect, url_for, flash, current_app
+import platform
+from flask import render_template, redirect, url_for, flash
 from app.core.main.BasePlugin import BasePlugin
-from app.database import session_scope
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Float
-from sqlalchemy.exc import OperationalError
+from app.database import Column, SurrogatePK, db, session_scope
+from sqlalchemy import Integer, String, Float, Text
 from sqlalchemy.orm.exc import DetachedInstanceError
 from app.core.lib.object import setProperty
 
-# Базовый класс для моделей SQLAlchemy
-Base = declarative_base()
-
-class Device(Base):
-    __tablename__ = "devices"
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    host = Column(String, nullable=False)
+class OnlineDevice(SurrogatePK, db.Model):
+    __tablename__ = "online_devices"
+    name = Column(String(255), nullable=False)
+    host = Column(String(255), nullable=False)
     port = Column(Integer, nullable=False)
-    action_online = Column(String)
-    action_offline = Column(String)
+    action_online = Column(Text)
+    action_offline = Column(Text)
     interval_online = Column(Integer, nullable=False, default=60)
     interval_offline = Column(Integer, nullable=False, default=30)
     retries = Column(Integer, nullable=False, default=3)
-    status = Column(String, default="offline")
+    status = Column(String(50), default="offline")
     next_check = Column(Float, default=0)
 
 class DeviceMonitor(BasePlugin):
     """Класс плагина DeviceMonitor, наследующийся от BasePlugin."""
 
-    def __init__(self, app, name=__name__):
+    def __init__(self, app):
         """
         Инициализация плагина.
 
         :param app: Объект Flask-приложения.
         :param name: Имя модуля (по умолчанию __name__).
         """
-        super().__init__(app, name)
+        super().__init__(app, __name__)
         self.app = app
         self.title = "Device Monitor"
         self.description = "Мониторинг устройств в сети с проверкой TCP-порта или ICMP."
@@ -61,7 +54,6 @@ class DeviceMonitor(BasePlugin):
         self.category = "Network"
         self.system = False
         self.actions = ["admin", "cycle"]
-        self.logger = logging.getLogger(__name__)
         self.locks = {}  # Словарь блокировок для каждого device_id
         self.ping_available = True  # Флаг доступности команды ping
 
@@ -71,7 +63,7 @@ class DeviceMonitor(BasePlugin):
         Создаёт таблицу устройств, проверяет доступность команды ping, инициализирует настройки и запускает фоновую задачу.
         """
         self.logger.info("Initializing DeviceMonitor plugin")
-        
+
         # Проверка доступности команды ping
         if not shutil.which("ping"):
             self.ping_available = False
@@ -79,13 +71,24 @@ class DeviceMonitor(BasePlugin):
         else:
             try:
                 # Тестовый запуск ping на localhost
-                subprocess.run(
-                    ["ping", "-c", "1", "-W", "2", "127.0.0.1"],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                    check=True
-                )
+                if platform.system() == "Windows":
+                    # Для Windows используем -n для количества пакетов и -w для таймаута (в мс)
+                    subprocess.run(
+                        ["ping", "-n", "1", "-w", "2000", "127.0.0.1"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        check=True
+                    )
+                else:  # Linux, MacOS и другие Unix-подобные
+                    # Для Linux/Unix используем -c для количества и -W для таймаута (в сек)
+                    subprocess.run(
+                        ["ping", "-c", "1", "-W", "2", "127.0.0.1"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        check=True
+                    )
                 self.logger.debug("Command 'ping' is available and functional")
             except subprocess.CalledProcessError as e:
                 self.ping_available = False
@@ -94,25 +97,13 @@ class DeviceMonitor(BasePlugin):
                 self.ping_available = False
                 self.logger.warning(f"Error testing 'ping' command: {e}. ICMP checks will be disabled. Ensure sufficient permissions or check system configuration. If the process is running in an LXC container, grant rights to the user with the command 'setcap cap_net_raw+ep /bin/ping'.")
 
-        # Создание таблицы устройств
-        try:
-            with session_scope() as session:
-                Base.metadata.create_all(session.bind)
-                self.logger.info("Created or verified devices table")
-                
-                # Инициализация настройки allow_shell_commands
-                if 'allow_shell_commands' not in self.config:
-                    self.config['allow_shell_commands'] = False
-                    self.saveConfig()
-                    self.logger.info("Initialized allow_shell_commands to False")
-                else:
-                    self.logger.debug(f"Loaded allow_shell_commands: {self.config['allow_shell_commands']}")
-        except OperationalError as e:
-            self.logger.error(f"Error creating devices table: {e}")
-            raise
-        
-        # Запуск фоновой задачи
-        threading.Thread(target=self.cyclic_task, daemon=True).start()
+            # Инициализация настройки allow_shell_commands
+            if 'allow_shell_commands' not in self.config:
+                self.config['allow_shell_commands'] = False
+                self.saveConfig()
+                self.logger.info("Initialized allow_shell_commands to False")
+            else:
+                self.logger.debug(f"Loaded allow_shell_commands: {self.config['allow_shell_commands']}")
 
     def loadConfig(self):
         """
@@ -172,13 +163,19 @@ class DeviceMonitor(BasePlugin):
 
         for attempt in range(1, retries + 1):
             try:
-                cmd = ["ping", "-c", "1", "-W", str(timeout), host]
+                encoding = 'utf8'
+                if platform.system() == "Windows":
+                    cmd = ["ping", "-n", "1", "-w", str(timeout * 1000), host]
+                    encoding = "cp866"
+                else:  # Linux, MacOS и другие Unix-подобные
+                    cmd = ["ping", "-c", "1", "-W", str(timeout), host]
                 result = subprocess.run(
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,
-                    check=True
+                    check=True,
+                    encoding=encoding,
                 )
                 self.logger.debug(f"ICMP ping to {host} successful (attempt {attempt}): {result.stdout}")
                 return True
@@ -233,12 +230,12 @@ class DeviceMonitor(BasePlugin):
         # Получаем или создаём блокировку для устройства
         if device_id not in self.locks:
             self.locks[device_id] = threading.Lock()
-        
+
         with self.locks[device_id]:
             self.logger.debug(f"Checking device ID {device_id}")
             try:
                 with session_scope() as session:
-                    device = session.query(Device).get(device_id)
+                    device = session.query(OnlineDevice).get(device_id)
                     if not device:
                         self.logger.warning(f"Device with ID {device_id} not found")
                         return
@@ -251,7 +248,7 @@ class DeviceMonitor(BasePlugin):
                     else:
                         online = self.check_tcp_port(device.host, device.port, device.retries)
                         self.logger.debug(f"Checked device {device.name} ({device.host}:{device.port}) via TCP: online={online}")
-                    
+
                     # Выполняем действия только при изменении статуса
                     if online and device.status == "offline":
                         device.status = "online"
@@ -269,7 +266,7 @@ class DeviceMonitor(BasePlugin):
                             device.interval_online if device.status == "online" else device.interval_offline
                         )
                         self.logger.debug(f"Device {device.name} ({device.host}:{device.port}) status unchanged: {device.status}")
-                    
+
                     session.commit()
             except DetachedInstanceError as e:
                 self.logger.error(f"DetachedInstanceError for device ID {device_id}: {e}")
@@ -282,27 +279,25 @@ class DeviceMonitor(BasePlugin):
         """
         Фоновая задача для периодической проверки устройств.
         """
-        self.logger.info("Starting DeviceMonitor cycle")
-        while True:
-            try:
-                with session_scope() as session:
-                    current_time = time.time()
-                    devices_to_check = session.query(Device).filter(Device.next_check <= current_time).all()
-                    device_ids = [device.id for device in devices_to_check]
-                    self.logger.debug(f"Devices to check: {device_ids}")
-                    next_check = min(
-                        [d.next_check for d in session.query(Device).all()],
-                        default=current_time + 60
-                    ) if session.query(Device).count() > 0 else current_time + 60
-                
-                # Проверяем устройства последовательно
-                for device_id in device_ids:
-                    self.check_device(device_id)
-                
-                time.sleep(max(0, next_check - time.time()))
-            except Exception as e:
-                self.logger.error(f"Error in cyclic task: {e}")
-                time.sleep(5)
+        try:
+            with session_scope() as session:
+                current_time = time.time()
+                devices_to_check = session.query(OnlineDevice).filter(OnlineDevice.next_check <= current_time).all()
+                device_ids = [device.id for device in devices_to_check]
+                self.logger.debug(f"Devices to check: {device_ids}")
+                next_check = min(
+                    [d.next_check for d in session.query(OnlineDevice).all()],
+                    default=current_time + 60
+                ) if session.query(OnlineDevice).count() > 0 else current_time + 60
+
+            # Проверяем устройства последовательно
+            for device_id in device_ids:
+                self.check_device(device_id)
+
+            self.event.wait(max(1, next_check - time.time()))
+        except Exception as e:
+            self.logger.error(f"Error in cyclic task: {e}")
+            self.event.wait(5.0)
 
     def admin(self, request):
         """
@@ -311,9 +306,6 @@ class DeviceMonitor(BasePlugin):
         :param request: Объект запроса Flask.
         :return: HTML-страница или редирект.
         """
-        self.logger.debug("Entering DeviceMonitor admin route")
-        endpoints = [rule.endpoint for rule in current_app.url_map.iter_rules()]
-        self.logger.debug(f"Available endpoints: {endpoints}")
 
         with session_scope() as session:
             # Обработка POST-запросов
@@ -340,7 +332,7 @@ class DeviceMonitor(BasePlugin):
                             if "Порт" not in str(e) and "Интервалы" not in str(e):
                                 raise ValueError("Порт, интервалы и попытки должны быть числами")
                             raise
-                        new_device = Device(
+                        new_device = OnlineDevice(
                             name=name,
                             host=host,
                             port=port,
@@ -385,7 +377,7 @@ class DeviceMonitor(BasePlugin):
                             if "Порт" not in str(e) and "Интервалы" not in str(e):
                                 raise ValueError("Порт, интервалы и попытки должны быть числами")
                             raise
-                        device = session.query(Device).get(device_id)
+                        device = session.query(OnlineDevice).get(device_id)
                         if not device:
                             raise ValueError(f"Устройство с ID {device_id} не найдено")
                         device.name = name
@@ -412,7 +404,7 @@ class DeviceMonitor(BasePlugin):
                         if not device_id:
                             raise ValueError("ID устройства обязателен")
                         device_id = int(device_id)
-                        device = session.query(Device).get(device_id)
+                        device = session.query(OnlineDevice).get(device_id)
                         if not device:
                             raise ValueError(f"Устройство с ID {device_id} не найдено")
                         session.delete(device)
@@ -451,7 +443,7 @@ class DeviceMonitor(BasePlugin):
                     return redirect(url_for("DeviceMonitor.module"))
                 try:
                     device_id = int(device_id)
-                    device = session.query(Device).get(device_id)
+                    device = session.query(OnlineDevice).get(device_id)
                     if not device:
                         self.logger.error(f"Device with ID {device_id} not found")
                         flash(f"Устройство с ID {device_id} не найдено", "danger")
@@ -467,9 +459,6 @@ class DeviceMonitor(BasePlugin):
                 return render_template("device_monitor_settings.html", allow_shell_commands=self.config.get('allow_shell_commands', False))
 
             # Основная страница со списком устройств
-            devices = session.query(Device).all()
+            devices = session.query(OnlineDevice).all()
             self.logger.info(f"Rendering admin page with {len(devices)} devices")
             return render_template("device_monitor_admin.html", devices=devices)
-
-# Регистрация плагина
-plugin = DeviceMonitor
