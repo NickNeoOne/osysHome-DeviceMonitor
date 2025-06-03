@@ -1,6 +1,9 @@
 {% extends 'layouts/module_admin.html' %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="DeviceMonitor">{{ _('Device Monitor')}}</a></li>
+{% endblock %}
 
-{% block content %}
+{% block module %}
 <div class="container-fluid">
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
@@ -17,7 +20,7 @@
         <div class="col">
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5 class="mb-0">Добавить устройство</h5>
+                    <h5 class="mb-0">{{ _('Add device')}}</h5>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('DeviceMonitor.module') }}">
@@ -54,8 +57,8 @@
                             <label for="retries" class="form-label">Количество попыток</label>
                             <input type="number" class="form-control" id="retries" name="retries" value="3" min="1" required>
                         </div>
-                        <button type="submit" class="btn btn-primary">Добавить</button>
-                        <a href="{{ url_for('DeviceMonitor.module') }}" class="btn btn-secondary">Отмена</a>
+                        <button type="submit" class="btn btn-primary">{{ _('Add')}}</button>
+                        <a href="{{ url_for('DeviceMonitor.module') }}" class="btn btn-secondary">{{ _('Cancel')}}</a>
                     </form>
                 </div>
             </div>

@@ -17,24 +17,10 @@ import shutil
 import platform
 from flask import render_template, redirect, url_for, flash
 from app.core.main.BasePlugin import BasePlugin
-from app.database import Column, SurrogatePK, db, session_scope
-from sqlalchemy import Integer, String, Float, Text
+from plugins.DeviceMonitor.models.OnlineDevice import OnlineDevice
+from app.database import session_scope
 from sqlalchemy.orm.exc import DetachedInstanceError
 from app.core.lib.object import setProperty
-
-class OnlineDevice(SurrogatePK, db.Model):
-    __module__ = "app.plugins.DeviceMonitor"  # Явно задаём module
-    __tablename__ = "online_devices"
-    name = Column(String(255), nullable=False)
-    host = Column(String(255), nullable=False)
-    port = Column(Integer, nullable=False)
-    action_online = Column(Text)
-    action_offline = Column(Text)
-    interval_online = Column(Integer, nullable=False, default=60)
-    interval_offline = Column(Integer, nullable=False, default=30)
-    retries = Column(Integer, nullable=False, default=3)
-    status = Column(String(50), default="offline")
-    next_check = Column(Float, default=0)
 
 class DeviceMonitor(BasePlugin):
     """Класс плагина DeviceMonitor, наследующийся от BasePlugin."""
