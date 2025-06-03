@@ -26,35 +26,35 @@
                     <form method="POST" action="{{ url_for('DeviceMonitor.module') }}">
                         <input type="hidden" name="action" value="add">
                         <div class="mb-3">
-                            <label for="name" class="form-label">Имя</label>
+                            <label for="name" class="form-label">{{ _('Name')}}</label>
                             <input type="text" class="form-control" id="name" name="name" required>
                         </div>
                         <div class="mb-3">
-                            <label for="host" class="form-label">Хост (IP или hostname)</label>
+                            <label for="host" class="form-label">{{ _('Host')}} (IP {{ _('or')}} hostname)</label>
                             <input type="text" class="form-control" id="host" name="host" required>
                         </div>
                         <div class="mb-3">
-                            <label for="port" class="form-label">Порт (0 для проверки только ICMP, 1–65535 для TCP)</label>
+                            <label for="port" class="form-label">{{ _('Port')}} (0 {{ _('for')}}  ICMP, 1–65535 {{ _('for')}} TCP)</label>
                             <input type="number" class="form-control" id="port" name="port" min="0" max="65535" value="0">
                         </div>
                         <div class="mb-3">
-                            <label for="action_online" class="form-label">Действие при переходе онлайн</label>
+                            <label for="action_online" class="form-label">{{ _('Action on transition')}} {{ _('online')}}</label>
                             <input type="text" class="form-control" id="action_online" name="action_online">
                         </div>
                         <div class="mb-3">
-                            <label for="action_offline" class="form-label">Действие при переходе оффлайн</label>
+                            <label for="action_offline" class="form-label">{{ _('Action on transition')}} {{ _('offline')}}</label>
                             <input type="text" class="form-control" id="action_offline" name="action_offline">
                         </div>
                         <div class="mb-3">
-                            <label for="interval_online" class="form-label">Интервал проверки онлайн (с)</label>
+                            <label for="interval_online" class="form-label">{{ _('Interval')}} {{ _('check')}} {{ _('online')}} (sec.)</label>
                             <input type="number" class="form-control" id="interval_online" name="interval_online" value="60" min="1" required>
                         </div>
                         <div class="mb-3">
-                            <label for="interval_offline" class="form-label">Интервал проверки оффлайн (с)</label>
+                            <label for="interval_offline" class="form-label">{{ _('Interval')}} {{ _('check')}} {{ _('offline')}} (sec.)</label>
                             <input type="number" class="form-control" id="interval_offline" name="interval_offline" value="30" min="1" required>
                         </div>
                         <div class="mb-3">
-                            <label for="retries" class="form-label">Количество попыток</label>
+                            <label for="retries" class="form-label">{{ _('Number of attempts')}}</label>
                             <input type="number" class="form-control" id="retries" name="retries" value="3" min="1" required>
                         </div>
                         <button type="submit" class="btn btn-primary">{{ _('Add')}}</button>

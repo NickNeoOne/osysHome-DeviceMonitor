@@ -1,8 +1,14 @@
 {
   "Add device": "Add device",
   "Attempts": "Attempts",
+  "Confirm delete": "Are you sure?",
   "Device Monitor": "Device Monitor",
+  "Edit device": "Edit device",
+  "for": "for",
+  "Number of attempts": "Number of attempts",
   "Offline interval (s)": "Offline interval (s)",
   "Online interval (s)": "Online interval (s)",
+  "only": "only",
+  "Port": "Port",
   "Status": "Status"
 }

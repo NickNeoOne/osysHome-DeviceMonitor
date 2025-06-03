@@ -26,8 +26,8 @@
                 <th>{{ _('Host')}}</th>
                 <th>{{ _('Port')}}</th>
                 <th>{{ _('Status')}}</th>
-                <th>{{ _('Online interval (s)')}}</th>
-                <th>{{ _('Offline interval (s)')}}</th>
+                <th>{{ _('Online interval')}} (sec.)</th>
+                <th>{{ _('Offline interval')}} (sec.)</th>
                 <th>{{ _('Attempts')}}</th>
                 <th>{{ _('Actions')}}</th>
             </tr>
@@ -53,7 +53,7 @@
                     <form method="POST" action="{{ url_for('DeviceMonitor.module') }}" style="display:inline;">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="device_id" value="{{ device.id }}">
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Вы уверены?')"><i
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ _('Confirm delete')}}')"><i
                                 class="fas fa-trash"></i></button>
                     </form>
                 </td>

@@ -19,42 +19,42 @@
         <div class="col">
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5 class="mb-0">Редактировать устройство</h5>
+                    <h5 class="mb-0">{{ _('Edit device')}}</h5>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('DeviceMonitor.module') }}">
                         <input type="hidden" name="action" value="edit">
                         <input type="hidden" name="device_id" value="{{ device.id }}">
                         <div class="mb-3">
-                            <label for="name" class="form-label">Имя</label>
+                            <label for="name" class="form-label">{{ _('Name')}}</label>
                             <input type="text" class="form-control" id="name" name="name" value="{{ device.name }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="host" class="form-label">Хост (IP или hostname)</label>
+                            <label for="host" class="form-label">{{ _('Host')}} (IP {{ _('or')}} hostname)</label>
                             <input type="text" class="form-control" id="host" name="host" value="{{ device.host }}" required>
                         </div>
                         <div class="mb-3">
-                            <label for="port" class="form-label">Порт (0 для проверки только ICMP, 1–65535 для TCP)</label>
+                            <label for="port" class="form-label">{{ _('Port')}} (0 {{ _('for')}}  ICMP, 1–65535 {{ _('for')}} TCP)</label>
                             <input type="number" class="form-control" id="port" name="port" value="{{ device.port }}" min="0" max="65535">
                         </div>
                         <div class="mb-3">
-                            <label for="action_online" class="form-label">Действие при переходе онлайн</label>
+                            <label for="action_online" class="form-label">{{ _('Action on transition')}} {{ _('online')}}</label>
                             <input type="text" class="form-control" id="action_online" name="action_online" value="{{ device.action_online or '' }}">
                         </div>
                         <div class="mb-3">
-                            <label for="action_offline" class="form-label">Действие при переходе оффлайн</label>
+                            <label for="action_offline" class="form-label">{{ _('Action on transition')}} {{ _('offline')}}</label>
                             <input type="text" class="form-control" id="action_offline" name="action_offline" value="{{ device.action_offline or '' }}">
                         </div>
                         <div class="mb-3">
-                            <label for="interval_online" class="form-label">Интервал проверки онлайн (с)</label>
+                            <label for="interval_online" class="form-label">{{ _('Interval')}} {{ _('check')}} {{ _('online')}} (sec.)</label>
                             <input type="number" class="form-control" id="interval_online" name="interval_online" value="{{ device.interval_online }}" min="1" required>
                         </div>
                         <div class="mb-3">
-                            <label for="interval_offline" class="form-label">Интервал проверки оффлайн (с)</label>
+                            <label for="interval_offline" class="form-label">{{ _('Interval')}} {{ _('check')}} {{ _('offline')}} (sec.)</label>
                             <input type="number" class="form-control" id="interval_offline" name="interval_offline" value="{{ device.interval_offline }}" min="1" required>
                         </div>
                         <div class="mb-3">
-                            <label for="retries" class="form-label">Количество попыток</label>
+                            <label for="retries" class="form-label">{{ _('Number of attempts')}}</label>
                             <input type="number" class="form-control" id="retries" name="retries" value="{{ device.retries }}" min="1" required>
                         </div>
                         <button type="submit" class="btn btn-primary">{{ _('Submit')}}</button>

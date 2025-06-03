@@ -20,7 +20,7 @@
         <div class="col">
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h5 class="mb-0">Настройки Device Monitor</h5>
+                    <h5 class="mb-0">{{ _('Settings')}} Device Monitor</h5>
                 </div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('DeviceMonitor.module') }}">
@@ -28,12 +28,12 @@
                         <div class="form-group mb-3">
                             <div class="form-check">
                                 <input type="checkbox" class="form-check-input" id="allow_shell_commands" name="allow_shell_commands" {% if allow_shell_commands %}checked{% endif %}>
-                                <label class="form-check-label" for="allow_shell_commands">Разрешить выполнение shell-команд</label>
+                                <label class="form-check-label" for="allow_shell_commands">{{ _('Allow execution of shell-commands')}}</label>
                             </div>
-                            <small class="form-text text-muted">Включение shell-команд позволяет выполнять произвольные команды в системе, указанные в действиях устройств. Используйте с осторожностью, особенно если процесс запущен от root, так как это может привести к выполнению вредоносного кода.</small>
+                            <small class="form-text text-muted"><span class="badge bg-danger">{{ _('Warning!!!')}}</span>  {{ _('Enabling shell commands allows arbitrary commands to be executed on the system as specified in the device actions. Use with caution, especially if the process is running as root, as this may result in malicious code being executed.')}}</small>
                         </div>
-                        <button type="submit" class="btn btn-success">Сохранить</button>
-                        <a href="{{ url_for('DeviceMonitor.module') }}" class="btn btn-secondary">Назад</a>
+                        <button type="submit" class="btn btn-success">{{ _('Submit')}}</button>
+                        <a href="{{ url_for('DeviceMonitor.module') }}" class="btn btn-secondary">{{ _('Close')}}</a>
                     </form>
                 </div>
             </div>
