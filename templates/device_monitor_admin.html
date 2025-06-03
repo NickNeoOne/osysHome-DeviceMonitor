@@ -1,71 +1,65 @@
 {% extends 'layouts/module_admin.html' %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="DeviceMonitor">{{ _('Device Monitor')}}</a></li>
+{% endblock %}
 
-{% block content %}
+{% block module %}
 <div class="container-fluid">
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
     {% for category, message in messages %}
-      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
         {{ message }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
-
-    <div class="row">
-        <div class="col">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <h5 class="mb-0">Устройства</h5>
-                </div>
-                <div class="card-body">
-                    <a href="{{ url_for('DeviceMonitor.module', action='add') }}" class="btn btn-success mb-3">Добавить устройство</a>
-                    <a href="{{ url_for('DeviceMonitor.module', action='settings') }}" class="btn btn-secondary mb-3" title="Настройки"><i class="fa-solid fa-gear"></i></a>
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Имя</th>
-                                <th>Хост</th>
-                                <th>Порт</th>
-                                <th>Статус</th>
-                                <th>Интервал онлайн (с)</th>
-                                <th>Интервал оффлайн (с)</th>
-                                <th>Попытки</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for device in devices %}
-                            <tr>
-                                <td>{{ device.id }}</td>
-                                <td>{{ device.name|e }}</td>
-                                <td>{{ device.host|e }}</td>
-                                <td>{{ 'ICMP' if device.port == 0 else device.port }}</td>
-                                <td>
-                                    <span class="badge bg-{{ 'success' if device.status == 'online' else 'danger' }}">
-                                        {{ device.status|e }}
-                                    </span>
-                                </td>
-                                <td>{{ device.interval_online }}</td>
-                                <td>{{ device.interval_offline }}</td>
-                                <td>{{ device.retries }}</td>
-                                <td>
-                                    <a href="{{ url_for('DeviceMonitor.module', action='edit', id=device.id) }}" class="btn btn-sm btn-primary"><i class="fas fa-pencil"></i></a>
-                                    <form method="POST" action="{{ url_for('DeviceMonitor.module') }}" style="display:inline;">
-                                        <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="device_id" value="{{ device.id }}">
-                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Вы уверены?')"><i class="fas fa-trash"></i></button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
     </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <a href="{{ url_for('DeviceMonitor.module', action='add') }}" class="btn btn-success mb-3">{{ _('Add device')}}</a>
+    <a href="{{ url_for('DeviceMonitor.module', action='settings') }}" class="btn btn-secondary mb-3"
+        title="{{ _('Settings')}}"><i class="fa-solid fa-gear"></i></a>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>{{ _('Name')}}</th>
+                <th>{{ _('Host')}}</th>
+                <th>{{ _('Port')}}</th>
+                <th>{{ _('Status')}}</th>
+                <th>{{ _('Online interval (s)')}}</th>
+                <th>{{ _('Offline interval (s)')}}</th>
+                <th>{{ _('Attempts')}}</th>
+                <th>{{ _('Actions')}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for device in devices %}
+            <tr>
+                <td>{{ device.id }}</td>
+                <td>{{ device.name|e }}</td>
+                <td>{{ device.host|e }}</td>
+                <td>{{ 'ICMP' if device.port == 0 else device.port }}</td>
+                <td>
+                    <span class="badge bg-{{ 'success' if device.status == 'online' else 'danger' }}">
+                        {{ device.status|e }}
+                    </span>
+                </td>
+                <td>{{ device.interval_online }}</td>
+                <td>{{ device.interval_offline }}</td>
+                <td>{{ device.retries }}</td>
+                <td>
+                    <a href="{{ url_for('DeviceMonitor.module', action='edit', id=device.id) }}"
+                        class="btn btn-sm btn-primary"><i class="fas fa-pencil"></i></a>
+                    <form method="POST" action="{{ url_for('DeviceMonitor.module') }}" style="display:inline;">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="device_id" value="{{ device.id }}">
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Вы уверены?')"><i
+                                class="fas fa-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

@@ -1,6 +1,10 @@
 {% extends 'layouts/module_admin.html' %}
 
-{% block content %}
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="DeviceMonitor">{{ _('Device Monitor')}}</a></li>
+{% endblock %}
+
+{% block module %}
 <div class="container-fluid">
 {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
